@@ -4,27 +4,37 @@ const dotenv = require("dotenv");
 const { OpenAI } = require("openai");
 
 dotenv.config();
+
 const app = express();
-const port = process.env.PORT || 8080; // Railway sometimes prefers 8080
+const port = process.env.PORT;
+
+if (!port) {
+  console.error("❌ No PORT defined in env!");
+  process.exit(1);
+}
 
 app.use(cors());
 app.use(express.json());
 
-console.log("🚀 Booting server...");
-console.log("🔑 Loaded API key:", process.env.OPENAI_API_KEY ? "YES ✅" : "NO ❌");
+console.log("🚀 Starting server...");
+console.log("🔑 OpenAI key present?", process.env.OPENAI_API_KEY ? "✅" : "❌");
+console.log("🌐 Binding to port:", port);
+
+// Health check
+app.get("/", (req, res) => {
+  res.send("✅ Server is live!");
+});
 
 let openai;
 try {
-  openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-  });
+  openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 } catch (e) {
   console.error("❌ OpenAI init failed:", e.message);
 }
 
 app.post("/chat", async (req, res) => {
   const { message } = req.body;
-  console.log("📩 Incoming message:", message);
+  console.log("📩 Incoming:", message);
 
   if (!message) {
     return res.status(400).json({ error: "No message provided" });
@@ -36,11 +46,10 @@ app.post("/chat", async (req, res) => {
       model: "gpt-3.5-turbo",
     });
 
-    const response = completion.choices[0].message.content;
-    console.log("✅ AI Response:", response);
-    res.json({ message: response });
+    const reply = completion.choices[0].message.content;
+    res.json({ message: reply });
   } catch (err) {
-    console.error("❌ Error handling /chat:", err.message);
+    console.error("❌ OpenAI error:", err.message);
     res.status(500).json({ error: err.message });
   }
 });

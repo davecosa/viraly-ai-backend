@@ -20,7 +20,6 @@ console.log("🚀 Starting server...");
 console.log("🔑 OpenAI key present?", process.env.OPENAI_API_KEY ? "✅" : "❌");
 console.log("🌐 Binding to port:", port);
 
-// Health check
 app.get("/", (req, res) => {
   res.send("✅ Server is live!");
 });
